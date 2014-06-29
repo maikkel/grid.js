@@ -1,7 +1,7 @@
 /*
-Grid.js v0.0.1
+Grid.js v0.1.1
 Copyright 2014 Maik Kellerhals <maik.kellerhals@gmail.com> 
-2014-06-23 
+2014-06-29 
 */
 
 var GRID = function(grid) {
@@ -371,7 +371,7 @@ var GRID = function(grid) {
 }(GRID || {});
 
 var GRID = function(grid) {
-    grid.version = "0.0.1";
+    grid.version = "0.1.1";
     grid.canvas = undefined;
     grid.context = undefined;
     grid.pixels;
