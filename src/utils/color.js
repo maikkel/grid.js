@@ -30,7 +30,11 @@ var GRID = (function (grid) {
 
 
     grid.color.randomColor = function() {
-        return "#"+componentToHex(parseInt(Math.random() * 255))+componentToHex(parseInt(Math.random() * 255))+componentToHex(parseInt(Math.random() * 255));
+        return this.rgbToHex(parseInt(Math.random() * 255),parseInt(Math.random() * 255),parseInt(Math.random() * 255))
+    }
+
+    grid.color.rgbToHex = function(r, g, b) {
+        return "#"+componentToHex(r)+componentToHex(g)+componentToHex(b);
     }
 
     grid.color.makeGrey = function(val) {

@@ -26,7 +26,10 @@ var GRID = function(grid) {
         };
     };
     grid.color.randomColor = function() {
-        return "#" + componentToHex(parseInt(Math.random() * 255)) + componentToHex(parseInt(Math.random() * 255)) + componentToHex(parseInt(Math.random() * 255));
+        return this.rgbToHex(parseInt(Math.random() * 255), parseInt(Math.random() * 255), parseInt(Math.random() * 255));
+    };
+    grid.color.rgbToHex = function(r, g, b) {
+        return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
     };
     grid.color.makeGrey = function(val) {
         if (val < 16) {
@@ -58,6 +61,7 @@ var GRID = function(grid) {
         this.done = false;
         this.rate = 8;
         this.animation = animations.BLINK;
+        this.gap = GRID.pixelGap;
         this.color = {
             r: 0,
             g: 0,
@@ -79,8 +83,9 @@ var GRID = function(grid) {
             }
         }
     };
-    grid.Pixel.prototype.fadeIn = function(color, rate) {
+    grid.Pixel.prototype.fadeIn = function(color, rate, gap) {
         if (!this.locked) {
+            this.gap = gap || 0;
             this.animation = animations.FADEIN;
             this.locked = true;
             color = grid.color.makeObject(color);
@@ -94,9 +99,10 @@ var GRID = function(grid) {
             }
         }
     };
-    grid.Pixel.prototype.fadeOut = function(color, rate) {
+    grid.Pixel.prototype.fadeOut = function(color, rate, gap) {
+        this.gap = gap || 0;
         this.animation = animations.FADEOUT;
-        this.locked = true;
+        this.locked = false;
         color = grid.color.makeObject(color);
         rate = rate || this.rate;
         this.color = color;
@@ -119,18 +125,18 @@ var GRID = function(grid) {
     grid.Pixel.prototype.updateFADEIN = function() {
         if (this.counter <= 255) {
             grid.draw.pixelClear(this.x, this.y);
-            grid.draw.pixelSize(this.x, this.y, this.color.hex, this.counter / 255, 0);
+            grid.draw.pixelSize(this.x, this.y, this.color.hex, this.counter / 255, this.gap);
             this.counter += this.rate;
         } else {
             this.counter = 255;
-            grid.draw.pixelSize(this.x, this.y, this.color.hex, this.counter / 255, 0);
+            grid.draw.pixelSize(this.x, this.y, this.color.hex, this.counter / 255, this.gap);
             this.done = true;
         }
     };
     grid.Pixel.prototype.updateFADEOUT = function() {
         if (this.counter >= 0) {
             grid.draw.pixelClear(this.x, this.y);
-            grid.draw.pixelSize(this.x, this.y, this.color.hex, this.counter / 255, 0);
+            grid.draw.pixelSize(this.x, this.y, this.color.hex, this.counter / 255, this.gap);
             this.counter -= this.rate;
         } else {
             this.counter = 0;
@@ -163,39 +169,81 @@ var GRID = function(grid) {
     grid.addBox = function(posX, posY, width, height, color) {
         return new grid.Box(posX, posY, width, height, color);
     };
-    grid.Box = function(posX, posY, width, height, color) {
+    grid.Box = function(posX, posY, width, height, colors) {
+        this.setup(posX, posY, width, height, colors);
+    };
+    grid.Box.prototype.setup = function(posX, posY, width, height, colors) {
         this.x = posX;
         this.y = posY;
         this.width = width;
         this.height = height;
-        this.color = color || "#ffffff";
+        this.color = colors || "#ffffff";
+        this.colors;
+        this.gap = 0;
+        if (this.color instanceof Array) {
+            this.colors = colors;
+        } else {
+            this.colors = new Array(this.width);
+            for (var x = 0; x < this.width; x++) {
+                this.colors[x] = new Array(this.height);
+                for (var y = 0; y < this.height; y++) {
+                    this.colors[x][y] = this.color;
+                }
+            }
+        }
+    };
+    grid.Box.prototype.setImage = function(imageUrl, callback) {
+        var imageObj = new Image();
+        var box = this;
+        imageObj.src = imageUrl;
+        imageObj.onload = function() {
+            var canvas = $("<canvas/>")[0];
+            canvas.width = this.width;
+            canvas.height = this.height;
+            var ctx = canvas.getContext("2d");
+            ctx.drawImage(this, 0, 0, this.width, this.height);
+            var imgd = ctx.getImageData(0, 0, this.width, this.height);
+            var data = imgd.data;
+            for (var x = 0; x < this.width; x++) {
+                for (var y = 0; y < this.height; y++) {
+                    var i = (y * this.width + x) * 4;
+                    if (box.colors[x] != undefined && box.colors[x][y] != undefined) {
+                        box.colors[x][y] = grid.color.rgbToHex(data[i], data[i + 1], data[i + 2]);
+                    }
+                }
+            }
+            callback();
+        };
+    };
+    grid.Box.prototype.show = function(gap) {
+        this.gap = gap || this.gap;
         for (var y = 0; y < this.height; y++) {
             for (var x = 0; x < this.width; x++) {
                 pixelIn(x, y, this);
             }
         }
     };
-    function pixelIn(x, y, box) {
-        setTimeout(function() {
-            var pixel = grid.pixels[x + box.x][y + box.y];
-            pixel.fadeIn(box.color, 32);
-            pixel.locked = true;
-        }, x * 20 + y * 30 + Math.random() * 200);
-    }
-    function pixelOut(x, y, box) {
-        setTimeout(function() {
-            var pixel = grid.pixels[x + box.x][y + box.y];
-            pixel.fadeOut(box.color, 32);
-            pixel.locked = true;
-        }, x * 20 + y * 30 + Math.random() * 200);
-    }
-    grid.Box.prototype.remove = function() {
+    grid.Box.prototype.hide = function() {
         for (var y = 0; y < this.height; y++) {
             for (var x = 0; x < this.width; x++) {
                 pixelOut(x, y, this);
             }
         }
     };
+    function pixelIn(x, y, box) {
+        setTimeout(function() {
+            var pixel = grid.pixels[x + box.x][y + box.y];
+            pixel.fadeIn(box.colors[x][y], 32, box.gap);
+            pixel.locked = true;
+        }, x * 20 + y * 30 + Math.random() * 200);
+    }
+    function pixelOut(x, y, box) {
+        setTimeout(function() {
+            var pixel = grid.pixels[x + box.x][y + box.y];
+            pixel.fadeOut(box.colors[x][y], 32, box.gap);
+            pixel.locked = true;
+        }, x * 20 + y * 30 + Math.random() * 200);
+    }
     return grid;
 }(GRID || {});
 

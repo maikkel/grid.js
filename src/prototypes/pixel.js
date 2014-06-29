@@ -17,6 +17,7 @@ var GRID = (function (grid) {
         this.done = false;
         this.rate = 8;
         this.animation = animations.BLINK;
+        this.gap = GRID.pixelGap;
         this.color = {
             r: 0,
             g: 0,
@@ -45,9 +46,9 @@ var GRID = (function (grid) {
         }
     }
 
-    grid.Pixel.prototype.fadeIn = function(color, rate) {
+    grid.Pixel.prototype.fadeIn = function(color, rate, gap) {
         if (!this.locked) {
-
+            this.gap = gap || 0;
             this.animation = animations.FADEIN;
             this.locked = true;
             color = grid.color.makeObject(color);
@@ -66,11 +67,11 @@ var GRID = (function (grid) {
         }
     }
 
-    grid.Pixel.prototype.fadeOut = function(color, rate) {
+    grid.Pixel.prototype.fadeOut = function(color, rate, gap) {
 
-
+            this.gap = gap || 0;
             this.animation = animations.FADEOUT;
-            this.locked = true;
+            this.locked = false;
             color = grid.color.makeObject(color);
             rate = rate || this.rate;
 
@@ -107,7 +108,7 @@ var GRID = (function (grid) {
                 this.y,
                 this.color.hex,
                 this.counter / 255,
-                0
+                this.gap
             );
 
             this.counter += this.rate;
@@ -118,7 +119,7 @@ var GRID = (function (grid) {
                 this.y,
                 this.color.hex,
                 this.counter / 255,
-                0
+                this.gap
             );
             this.done = true;
         }
@@ -133,7 +134,7 @@ var GRID = (function (grid) {
                 this.y,
                 this.color.hex,
                 this.counter / 255,
-                0
+                this.gap
             );
 
             this.counter -= this.rate;
