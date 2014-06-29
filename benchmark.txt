@@ -1,0 +1,18 @@
+Objects drawn per frame, Windows 8.1
+====================================
+
+        -------------------------------------------
+        | FF 30.0     | Chrome 35.0 | IE 11       |
+        |-------------|-------------|-------------|
+        |    1 |    2 |    1 |    2 |    1 |    2 |
+--------|------|------|------|------|------|------|
+| 60fps | 1150 |  200 | 1450 |  600 | 1100 |  450 |
+| 30fps | 3450 |  850 | 3450 | 1800 | 3750 | 2100 |
+| 15fps | 5650 | 1800 | 5550 | 3100 | 6050 | 3850 |
+---------------------------------------------------
+
+1 = native
+2 = jcanvas
+
+conclusion: DON'T USE JCANVAS FOR SIMPLE PIXEL/SHAPE DRAWING!!!
+interesting: IE actually the fastest... who would have thought? (Maybe better DX integration?)
